@@ -8,13 +8,13 @@ package dataStructures.list;
 
 public class ListException extends RuntimeException {
 
-	private static final long serialVersionUID = -17371304231172484L;
+    private static final long serialVersionUID = -17371304231172484L;
 
-	public ListException() {
-	   super();
-	 }
+    public ListException() {
+       super();
+     }
 
-	 public ListException(String msg) {
-	   super(msg);
-	 }
+     public ListException(String msg) {
+       super(msg);
+     }
 }

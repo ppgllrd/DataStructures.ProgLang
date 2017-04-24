@@ -14,28 +14,28 @@ import java.util.NoSuchElementException;
  */
 public class LinkedList<T> implements List<T> {
 
-	private static class Node<E> {
-		E elem;
-		Node<E> next;
+    private static class Node<E> {
+        E elem;
+        Node<E> next;
 
-		Node(E x, Node<E> node) {
-			elem = x;
-			next = node;
-		}
-	}
+        Node(E x, Node<E> node) {
+            elem = x;
+            next = node;
+        }
+    }
 
-	private Node<T> first, last;
-	private int sz;
+    private Node<T> first, last;
+    private int sz;
 
-	/**
-	 * Constructor. Creates an empty list.
-	 * <p>Time complexity: O(1)
-	 */
-	public LinkedList() {
-		first = null;
-		last = null;
-		sz = 0;
-	}
+    /**
+     * Constructor. Creates an empty list.
+     * <p>Time complexity: O(1)
+     */
+    public LinkedList() {
+        first = null;
+        last = null;
+        sz = 0;
+    }
 
     /**
      * Copy constructor. Creates a new list as a deep copy of that.
@@ -62,18 +62,18 @@ public class LinkedList<T> implements List<T> {
         }
     }
 
-	private void validateIndex(int i) {
-		if (i < 0 || i >= size())
-			throw new ListException("Invalid position " + i);
-	}
+    private void validateIndex(int i) {
+        if (i < 0 || i >= size())
+            throw new ListException("Invalid position " + i);
+    }
 
-	private Node<T> atIndex(int i) {
-		Node<T> aux = first;
-		for (int pos = 0; pos < i; pos++)
-			aux = aux.next;
+    private Node<T> atIndex(int i) {
+        Node<T> aux = first;
+        for (int pos = 0; pos < i; pos++)
+            aux = aux.next;
 
-		return aux;
-	}
+        return aux;
+    }
 
     /**
      * {@inheritDoc}
@@ -91,48 +91,48 @@ public class LinkedList<T> implements List<T> {
         return sz == 0;
     }
 
-	/**
-	 * {@inheritDoc}
-	 * <p>Time complexity: O(n)
-	 * @throws ListException {@inheritDoc} 
-	 */
-	public T get(int i) {
-		validateIndex(i);
-		return atIndex(i).elem;
-	}
+    /**
+     * {@inheritDoc}
+     * <p>Time complexity: O(n)
+     * @throws ListException {@inheritDoc} 
+     */
+    public T get(int i) {
+        validateIndex(i);
+        return atIndex(i).elem;
+    }
 
-	/** 
-	 * {@inheritDoc}
-	 * <p>Time complexity: O(n)
-	 * @throws ListException {@inheritDoc} 
-	 */
-	public void set(int i, T x) {
-		validateIndex(i);
-		atIndex(i).elem = x;
-	}
+    /** 
+     * {@inheritDoc}
+     * <p>Time complexity: O(n)
+     * @throws ListException {@inheritDoc} 
+     */
+    public void set(int i, T x) {
+        validateIndex(i);
+        atIndex(i).elem = x;
+    }
 
-	/** 
-	 * {@inheritDoc}
-	 * <p>Time complexity: O(n)
-	 * @throws ListException {@inheritDoc} 
-	 */
-	public void insert(int i, T x) {
-		if (i == sz) { // insertion after last element
-			Node<T> node = new Node<>(x, null);
-			if (sz == 0) // was list empty?
-				first = node;
-			else
-				last.next = node;
-			last = node;
-		} else if (i == 0) { // insertion at head, and list was not empty
-			first = new Node<>(x, first);
-		} else { // internal insertion
-			validateIndex(i);
-			Node<T> prev = atIndex(i - 1);
-			prev.next = new Node<>(x, prev.next);
-		}
-		sz++;
-	}
+    /** 
+     * {@inheritDoc}
+     * <p>Time complexity: O(n)
+     * @throws ListException {@inheritDoc} 
+     */
+    public void insert(int i, T x) {
+        if (i == sz) { // insertion after last element
+            Node<T> node = new Node<>(x, null);
+            if (sz == 0) // was list empty?
+                first = node;
+            else
+                last.next = node;
+            last = node;
+        } else if (i == 0) { // insertion at head, and list was not empty
+            first = new Node<>(x, first);
+        } else { // internal insertion
+            validateIndex(i);
+            Node<T> prev = atIndex(i - 1);
+            prev.next = new Node<>(x, prev.next);
+        }
+        sz++;
+    }
 
     /**
      * {@inheritDoc}
@@ -159,61 +159,61 @@ public class LinkedList<T> implements List<T> {
     }
 
     /**
-	 * {@inheritDoc}
-	 * <p>Time complexity: O(1)
-	 */
-	public void append(T x) {
-		Node<T> node = new Node<>(x, null);
-		if (sz == 0) // was list empty?
-			first = node;
-		else
-			last.next = node;
-		last = node;
-		sz++;
-	}
-	
-	/** 
-	 * {@inheritDoc}
-	 * <p>Time complexity: O(1)
-	 */
-	public void prepend(T x) {
-		first = new Node<>(x, first);
-		if(sz == 0)
-			last = first;
-		sz++;
-	}
+     * {@inheritDoc}
+     * <p>Time complexity: O(1)
+     */
+    public void append(T x) {
+        Node<T> node = new Node<>(x, null);
+        if (sz == 0) // was list empty?
+            first = node;
+        else
+            last.next = node;
+        last = node;
+        sz++;
+    }
+    
+    /** 
+     * {@inheritDoc}
+     * <p>Time complexity: O(1)
+     */
+    public void prepend(T x) {
+        first = new Node<>(x, first);
+        if(sz == 0)
+            last = first;
+        sz++;
+    }
 
-	/**
-	 * Iterator over elements in list.
-	 * Note that {@code remove} method is not supported. Note also 
-	 * that list structure should not be modified during iteration as 
-	 * iterator state may become inconsistent.
-	 * @see java.lang.Iterable#iterator()
-	 */
-	public Iterator<T> iterator() {
-		return new LinkedListIterator();
-	}
+    /**
+     * Iterator over elements in list.
+     * Note that {@code remove} method is not supported. Note also 
+     * that list structure should not be modified during iteration as 
+     * iterator state may become inconsistent.
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator<T> iterator() {
+        return new LinkedListIterator();
+    }
 
-	private class LinkedListIterator implements Iterator<T> {
-		Node<T> current;
+    private class LinkedListIterator implements Iterator<T> {
+        Node<T> current;
 
-		public LinkedListIterator(){
-			current = first;
-		}
-		
-		public boolean hasNext() {
-			return current != null;
-		}
+        public LinkedListIterator(){
+            current = first;
+        }
+        
+        public boolean hasNext() {
+            return current != null;
+        }
 
-		public T next() {
-			if (!hasNext())
-				throw new NoSuchElementException();
-			
-			T x = current.elem;
-			current = current.next;
-			return x;
-		}
-	}
+        public T next() {
+            if (!hasNext())
+                throw new NoSuchElementException();
+            
+            T x = current.elem;
+            current = current.next;
+            return x;
+        }
+    }
 
     /**
      * Returns representation of list as a String.
