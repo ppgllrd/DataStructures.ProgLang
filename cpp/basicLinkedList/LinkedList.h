@@ -23,6 +23,8 @@ namespace dataStructures {
 
             template<typename E> using NodeP = Node<E> *;
 
+            // Just like in Java, this class can be non-generic and
+            // use parameter <T> from outer class
             template<typename E>
             class Node {
             public:
@@ -163,11 +165,32 @@ namespace dataStructures {
                 return sz;
             }
 
-            T &operator[](const int i) const {
+            bool isEmpty() const {
+                return sz == 0;
+            }
+
+            // this operator can be used to read an element in the list
+            const T& operator[](const int i) const {
+                validateIndex(i);
                 return atIndex(i)->elem;
             }
 
-            T get(const int i) const {
+            // this one can be used to modify an element:
+            // list[i] = x;
+            T& operator[](const int i) {
+                validateIndex(i);
+                return atIndex(i)->elem;
+            }
+
+            // Next 3 methods are not really needed in C++ as operator []
+            // can be used for reading/writing an element in the list:
+            const T& get(const int i) const {
+                validateIndex(i);
+                return atIndex(i)->elem;
+            }
+
+            T& get(const int i) {
+                validateIndex(i);
                 return atIndex(i)->elem;
             }
 
@@ -198,9 +221,8 @@ namespace dataStructures {
                 validateIndex(i);
                 if (i == 0) { // removing first element
                     NodeP<T> toDelete = first; // difference wrt Java: node must be freed explicitly
-                    delete(toDelete);
-
                     first = first->next;
+                    delete(toDelete);
 
                     if (first == nullptr) // was also last element?
                         last = nullptr;
@@ -209,9 +231,8 @@ namespace dataStructures {
                     NodeP<T> prev = atIndex(i - 1);
 
                     NodeP<T> toDelete = prev->next; // difference wrt Java: node must be freed explicitly
-                    delete(toDelete);
-
                     prev->next = prev->next->next;
+                    delete(toDelete);
 
                     if (i == (sz - 1)) // was last element?
                         last = prev;
@@ -236,6 +257,8 @@ namespace dataStructures {
                 sz++;
             }
 
+            // Just like in Java, this class can be non-generic and
+            // use parameter <T> from outer class
             template<typename E>
             class Iterator {
             private:
