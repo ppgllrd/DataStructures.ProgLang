@@ -44,20 +44,29 @@ namespace dataStructures {
             // Copy constructor
             LinkedList(const LinkedList<T> &that) : LinkedList() {
                 if(that.sz > 0) {
+                    LinkedList<T> copy;
+
                     // copy first node
-                    NodeP<T> firstP = new Node<T>(that.first->elem, nullptr);
-                    NodeP<T> lastP = firstP;
+                    NodeP<T> node = new Node<T>(that.first->elem, nullptr);
+                    copy.first = node;
+                    copy.last = node;
 
                     // copy rest of nodes
                     for(NodeP<T> aux = that.first->next; aux != nullptr; aux = aux->next) {
-                        lastP->next = new Node<T>(aux->elem, nullptr);
-                        lastP = lastP->next;
+                        node = new Node<T>(aux->elem, nullptr);
+                        copy.last->next = node;
+                        copy.last = node;
                     }
 
+                    // if new fails due to bad_alloc, following code will be skipped and
+                    // destructor for copy will release allocated nodes
+
+                    copy.sz = that.sz;
+
                     // safely set new state
-                    first = firstP;
-                    last = lastP;
-                    sz = that.sz;
+                    std::swap(first, copy.first);
+                    std::swap(last, copy.last);
+                    std::swap(sz, copy.sz);
                 }
             }
 
@@ -81,7 +90,7 @@ namespace dataStructures {
             // 1) steal that’s resources
             // 2) reset that
             LinkedList(LinkedList<T>&& that) noexcept
-            // Reset this
+                    // Reset this
                     : LinkedList() {
 
                 // And swap to steal that’s resources
@@ -125,23 +134,34 @@ namespace dataStructures {
             }
 
             // Initializer list
-            LinkedList(const std::initializer_list<T> &xs) noexcept : sz(xs.size()) {
-                if(sz == 0) {
-                    first = nullptr;
-                    last = nullptr;
-                } else {
+            LinkedList(const std::initializer_list<T> &xs) : LinkedList() {
+                if(xs.size() > 0) {
+                    LinkedList<T> copy;
+
                     // copy first node
                     auto it = xs.begin();
-                    first = new Node<T>(*it, nullptr);
+                    NodeP<T> node = new Node<T>(*it, nullptr);
                     it++;
-                    last = first;
+                    copy.first = node;
+                    copy.last = node;
 
                     // copy rest of nodes
                     while(it != xs.end()) {
-                        last->next = new Node<T>(*it, nullptr);
+                        node = new Node<T>(*it, nullptr);
                         it++;
-                        last = last->next;
+                        copy.last->next = node;
+                        copy.last = node;
                     }
+
+                    // if new fails due to bad_alloc, following code will be skipped and
+                    // destructor for copy will release allocated nodes
+
+                    copy.sz = xs.size();
+
+                    // safely set new state
+                    std::swap(first, copy.first);
+                    std::swap(last, copy.last);
+                    std::swap(sz, copy.sz);
                 }
             }
 
