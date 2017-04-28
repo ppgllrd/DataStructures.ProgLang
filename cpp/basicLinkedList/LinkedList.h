@@ -1,7 +1,7 @@
 /******************************************************************************
  * Singly linked linear lists.
  *
- * Pepe Gallardo, 2017
+ * Pepe Gallardo / Vicente Benjumea, 2017
  *
  ******************************************************************************/
 
@@ -44,29 +44,8 @@ namespace dataStructures {
             // Copy constructor
             LinkedList(const LinkedList<T> &that) : LinkedList() {
                 if(that.sz > 0) {
-                    LinkedList<T> copy;
-
-                    // copy first node
-                    NodeP<T> node = new Node<T>(that.first->elem, nullptr);
-                    copy.first = node;
-                    copy.last = node;
-
-                    // copy rest of nodes
-                    for(NodeP<T> aux = that.first->next; aux != nullptr; aux = aux->next) {
-                        node = new Node<T>(aux->elem, nullptr);
-                        copy.last->next = node;
-                        copy.last = node;
-                    }
-
-                    // if new fails due to bad_alloc, following code will be skipped and
-                    // destructor for copy will release allocated nodes
-
-                    copy.sz = that.sz;
-
-                    // safely set new state
-                    std::swap(first, copy.first);
-                    std::swap(last, copy.last);
-                    std::swap(sz, copy.sz);
+                    // *this = std::move(duplicate(that)); // move semantics
+                    *this = duplicate(that); // move semantics by default
                 }
             }
 
@@ -74,15 +53,15 @@ namespace dataStructures {
             // 1) release this’s resources
             // 2) make this be a copy of that
             LinkedList<T> &operator=(const LinkedList<T>& that) {
-                // Copy
-                LinkedList<T> copy(that);
+                if (this != &that) {
+                    // Copy
+                    LinkedList<T> copy(that);
 
-                // And swap
-                std::swap(first, copy.first);
-                std::swap(last, copy.last);
-                std::swap(sz, copy.sz);
+                    // And swap
+                    this->swap(copy);
 
-                // Destruction of copy will release old this’s resources
+                    // Destruction of copy will release old this’s resources
+                }
                 return *this;
             }
 
@@ -90,13 +69,11 @@ namespace dataStructures {
             // 1) steal that’s resources
             // 2) reset that
             LinkedList(LinkedList<T>&& that) noexcept
-                    // Reset this
-                    : LinkedList() {
+                // Reset this
+                : LinkedList() {
 
                 // And swap to steal that’s resources
-                std::swap(first, that.first);
-                std::swap(last, that.last);
-                std::swap(sz, that.sz);
+                this->swap(that);
             }
 
             // Move assignment should:
@@ -108,27 +85,22 @@ namespace dataStructures {
                     LinkedList<T> tmp;
 
                     // Swap this and tmp
-                    std::swap(first, tmp.first);
-                    std::swap(last, tmp.last);
-                    std::swap(sz, tmp.sz);
+                    this->swap(tmp);
 
                     // this is now a reset structure
                     // Destruction of tmp will release old this’s resources
 
                     // And swap this and that to steal that’s resources
-                    std::swap(first, that.first);
-                    std::swap(last, that.last);
-                    std::swap(sz, that.sz);
+                    this->swap(that);
                 }
                 return *this;
             }
 
             // Destructor
             ~LinkedList() {
-                NodeP<T> aux = first;
-                while (aux != nullptr) {
-                    NodeP<T> toDelete = aux;
-                    aux = aux->next;
+                while (first != nullptr) {
+                    NodeP<T> toDelete = first;
+                    first = first->next;
                     delete toDelete;
                 }
             }
@@ -136,36 +108,39 @@ namespace dataStructures {
             // Initializer list
             LinkedList(const std::initializer_list<T> &xs) : LinkedList() {
                 if(xs.size() > 0) {
-                    LinkedList<T> copy;
-
-                    // copy first node
-                    auto it = xs.begin();
-                    NodeP<T> node = new Node<T>(*it, nullptr);
-                    it++;
-                    copy.first = node;
-                    copy.last = node;
-
-                    // copy rest of nodes
-                    while(it != xs.end()) {
-                        node = new Node<T>(*it, nullptr);
-                        it++;
-                        copy.last->next = node;
-                        copy.last = node;
-                    }
-
-                    // if new fails due to bad_alloc, following code will be skipped and
-                    // destructor for copy will release allocated nodes
-
-                    copy.sz = xs.size();
-
-                    // safely set new state
-                    std::swap(first, copy.first);
-                    std::swap(last, copy.last);
-                    std::swap(sz, copy.sz);
+                    // *this = std::move(duplicate(xs)); // move semantics
+                    *this = duplicate(xs); // move semantics by default
                 }
             }
 
         private:
+            template <typename Iterable>
+            static LinkedList<T> duplicate(const Iterable& src) {
+                LinkedList<T> copy;
+                auto it = src.begin();
+                if (it != src.end()) {
+                    // copy first node
+                    copy.first = new Node<T>(*it, nullptr);
+                    copy.last = copy.first;
+                    ++copy.sz;
+                    ++it;
+
+                    // copy rest of nodes
+                    while (it != src.end()) {
+                        copy.last->next = new Node<T>(*it, nullptr);
+                        copy.last = copy.last->next;
+                        ++copy.sz;
+                        ++it;
+                    }
+                }
+
+                // if new above fails due to bad_alloc,
+                // destructor for copy will release allocated nodes
+
+                // this makes use of move semantics
+                return copy;
+            }
+
             void validateIndex(const int i) const {
                 if (i < 0 || i >= size())
                     throw ListException("Invalid position " + i);
@@ -174,7 +149,7 @@ namespace dataStructures {
             // Pre: i is a valid index
             NodeP<T> atIndex(const int i) const {
                 NodeP<T> aux = first;
-                for (int pos = 0; pos < i; pos++)
+                for (int pos = 0; pos < i; ++pos)
                     aux = aux->next;
 
                 return aux;
@@ -220,21 +195,19 @@ namespace dataStructures {
             }
 
             void insert(const int i, const T &x) {
-                if (i == sz) { // insertion after last element
-                    NodeP<T> node = new Node<T>(x, nullptr);
-                    if (sz == 0) // was list empty?
-                        first = node;
-                    else
-                        last->next = node;
-                    last = node;
-                } else if (i == 0) { // insertion at head, and list was not empty
+                if (i == 0) { // insertion at head
                     first = new Node<T>(x, first);
+                    if (i == sz) // insertion at head, and list was empty
+                        last = first;
+                } else if (i == sz) { // insertion after last element
+                    last->next = new Node<T>(x, nullptr);;
+                    last = last->next;
                 } else { // internal insertion
                     validateIndex(i);
                     NodeP<T> prev = atIndex(i - 1);
                     prev->next = new Node<T>(x, prev->next);
                 }
-                sz++;
+                ++sz;
             }
 
             void remove(const int i) {
@@ -246,7 +219,6 @@ namespace dataStructures {
 
                     if (first == nullptr) // was also last element?
                         last = nullptr;
-
                 } else {
                     NodeP<T> prev = atIndex(i - 1);
 
@@ -257,7 +229,7 @@ namespace dataStructures {
                     if (i == (sz - 1)) // was last element?
                         last = prev;
                 }
-                sz--;
+                --sz;
             }
 
             void append(const T &x) {
@@ -267,14 +239,20 @@ namespace dataStructures {
                 else
                     last->next = node;
                 last = node;
-                sz++;
+                ++sz;
             }
 
             void prepend(const T &x) {
                 first = new Node<T>(x, first);
                 if (sz == 0) // was list empty?
                     last = first;
-                sz++;
+                ++sz;
+            }
+
+            void swap(LinkedList<T>& that) {
+                std::swap(first, that.first);
+                std::swap(last, that.last);
+                std::swap(sz, that.sz);
             }
 
             // Just like in Java, this class can be non-generic and
@@ -282,9 +260,14 @@ namespace dataStructures {
             template<typename E>
             class Iterator {
             private:
+                friend class LinkedList<E>;
+
                 NodeP<E> current;
-            public:
+
+                // only class LinkedList<E> can create this kind of iterators
                 Iterator(NodeP<E> node) : current(node) {}
+
+            public:
 
                 Iterator &operator++() {
                     current = current->next;
@@ -308,24 +291,26 @@ namespace dataStructures {
 
             };
 
-            Iterator<T> begin() {
+            Iterator<T> begin() const {
                 return Iterator<T>(first);
             }
 
-            Iterator<T> end() {
+            Iterator<T> end() const {
                 return Iterator<T>(nullptr);
             }
 
             friend std::ostream &operator<<(std::ostream &out, const LinkedList<T> &xs) {
                 out << "LinkedList(";
-                NodeP<T> aux = xs.first;
-                for (int i = 0; i < xs.sz - 1; i++) {
-                    out << aux->elem << ",";
-                    aux = aux->next;
-                }
-                if (xs.sz > 0)
+                if (xs.sz > 0) {
+                    NodeP<T> aux = xs.first;
                     out << aux->elem;
+                    for (int i = 1; i < xs.sz; ++i) {
+                        aux = aux->next;
+                        out << "," << aux->elem;
+                    }
+                }
                 out << ")";
+                return out;
             }
         };
     }
