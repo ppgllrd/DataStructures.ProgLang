@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <iostream>
+#include <string>
 #include "ListException.h"
 
 namespace dataStructures {
@@ -143,7 +144,7 @@ namespace dataStructures {
 
             void validateIndex(const int i) const {
                 if (i < 0 || i >= size())
-                    throw ListException("Invalid position " + i);
+                    throw ListException("Invalid position "+std::to_string(i));
             }
 
             // Pre: i is a valid index
